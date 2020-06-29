@@ -38,7 +38,7 @@ else
     echo "ufw firewall found"
 fi
 
-#checkphp=`dpkg-query -W -f='${Status} ${Version}\n' php`
+#php check and install
 checkphp='php'
 webserver=''
 clear
@@ -53,7 +53,7 @@ if [[ `ps -acx|grep nginx|wc -l` > 0 ]]; then
     echo "Found Nginx"
     webserver='Nginx'
 fi
-#se non trova nulla s'interrompe
+
 if [ "$webserver" == "" ]; then
     echo "no type of web server found"
     echo "Non è stata registrata la presenza di alcun web server...."
@@ -64,14 +64,6 @@ if [ "$webserver" == "" ]; then
         echo "Apache installing..."
         sudo apt install apache2 -y
         sudo systemctl start apache2
-        # if [[ $comm == "apt" || $comm == "apt-get" ]]; then
-        # sudo apt install apache2 -y
-        # sudo systemctl start apache2
-        # elif [[ $comm == "yum" ]]; then
-        # sudo yum -y install httpd
-        # sudo systemctl start httpd
-        # sudo systemctl enable httpd
-        # fi
         echo "Apache installed and running"
         webserver='Apache'
     elif [ "$choice" == "Nginx" ]; then
@@ -106,7 +98,7 @@ else
 fi
 #check php
 
-#if [[ $checkphp == *"no packages found"* ]]; then
+
 if [ "$webserver" == "Apache" ]; then
 clear
 echo "writing Apache conf"
@@ -137,7 +129,7 @@ if ! dpkg -s $checkphp >/dev/null 2>&1; then
             sudo apt-get install php-{bcmath,dev,bz2,intl,gd,mbstring,mysql,zip,fpm} -y
         fi
 
-#elif [[ $checkphp == *"install ok"* ]]; then
+
 else
 	clear
     echo "php found"
@@ -170,7 +162,6 @@ if [[ `php -v` > 40 ]]; then
     echo "php found"
      sleep 3s
      phpinst=true
-    #dpkg-query -W -f='${Status} ${Version}\n' php
 
 else
     clear
@@ -183,16 +174,6 @@ fi
 if [[ `php -v` < 40 ]]; then
     echo "try to get a better version of php..."
     sudo apt-get update
-#    sudo apt -y install software-properties-common
-    #sudo add-apt-repository ppa:ondrej/php
- #   sudo apt install -y apt-transport-https lsb-release ca-certificates
-  #  wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
-   # echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
-   # sudo apt-get update
-#    sudo apt install php7.4 -y
-#    sudo systemctl disable --now apache2
-#    sudo apt-get install nginx php7.4-fpm -y
-   # sudo apt-get install php7.4-fpm -y
     sudo apt-get install php-fpm php-dev php-mysql -y
     sudo systemctl restart nginx
 fi
@@ -284,7 +265,6 @@ if ! dpkg -s $checkvsftpd >/dev/null 2>&1; then
         sudo systemctl restart vsftpd
         echo "Restarted."
 
-#elif [[ $checkvsftpd == *"install ok"* ]]; then
 else
     echo "vsftpd found"
     dpkg-query -W -f='${Status} ${Version}\n' vsftpd
@@ -417,7 +397,6 @@ read answerpass < /dev/tty
 echo "ghost:$answerpass" | sudo chpasswd
 echo "ghost root permission settings..."
 sudo usermod -aG sudo,adm ghost
-#sudo chown root:root /var/www/
 echo "ghost ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 echo "ghost is root"
 
@@ -427,22 +406,17 @@ sudo usermod -d /var/www ghost
 echo "ghost properties on destination folder..."
 sudo chown ghost:ghost /var/www/ghost
 sudo chown ghost:ghost /var/www/ghost_file_manager
-# sudo mkdir /home/ghost/file_manager
-# sudo chown ghost:ghost /home/ghost/file_manager
-# sudo chmod a-w /home/ghost
 echo "ghost" | sudo tee -a /etc/vsftpd.userlist
 clear
 echo "ufw settings...."
 sleep 3s
 sudo ufw allow ssh
-#sudo ufw allow ftp
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
 sudo ufw allow 20/tcp
 sudo ufw allow 21/tcp
 sudo ufw allow 990/tcp
 sudo ufw allow 40000:50000/tcp
-#sudo ufw allow 5555/tcp
 sudo ufw allow in from 127.0.0.1 to any port 5555 proto tcp
 echo "y" | sudo ufw enable
 
@@ -466,21 +440,18 @@ if [ "$webserver" == "Nginx" ]; then
     echo "Restarting php...."
     sudo systemctl restart php"$versionphp"-fpm
     echo "Done."
-   # echo "Good gHost ;)"
     figlet gHost
     echo "Developed by Simone Ghisu and Marcello Pajntar"
 elif [ "$webserver" == "Apache" ]; then
     sudo chown root:adm /var/log/apache2
     echo "Make adjustament for Apache web server"
     checkgroup=$(grep "export APACHE_RUN_GROUP=" /etc/apache2/envvars)
-   # checkuser=`ps aux | egrep '([a|A]pache|[h|H]ttpd)' | awk '{ print $1}' | uniq | tail -1`
     checkuser=$(grep "export APACHE_RUN_USER=" /etc/apache2/envvars)
     sed -i 's/'"$checkuser"'/export APACHE_RUN_USER=ghost/' /etc/apache2/envvars
     sed -i 's/'"$checkgroup"'/export APACHE_RUN_GROUP=root/' /etc/apache2/envvars
     echo "Restarting Apache...."
     sudo systemctl restart apache2
     echo "Done."
-    #echo "Good gHost ;)"
     figlet gHost
     echo "Developed by Simone Ghisu and Marcello Pajntar"
 fi
